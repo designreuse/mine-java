@@ -29,7 +29,7 @@ public class Raw {
         ArrayList<Property> propertyList = new ArrayList<Property>();
         Date startDate = new Date();
         
-        System.out.println("Raw() intialised at " + startDate);
+        Utility.exeStart(startDate);
         
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
@@ -78,8 +78,7 @@ public class Raw {
         writer.write(gson.toJson(propertyList));
     	writer.close();
     	
-    	Date endDate = new Date();
-    	System.out.printf("Raw() ended at %s, time elapsed: %s",endDate,Utility.timeElapsed(startDate,endDate));
+    	Utility.exeComplete(startDate);
 	}
 
 }

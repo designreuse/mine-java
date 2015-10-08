@@ -41,7 +41,7 @@ public class ExtractScore {
 		Date startDate = new Date();
 		int currentPropertyCount = 0;
         
-        System.out.println("Raw() intialised at " + startDate);
+		Utility.exeStart(startDate);
 		
 		br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 		Property[] propertyList = gson.fromJson(br.readLine(), Property[].class);
@@ -208,7 +208,7 @@ public class ExtractScore {
         writer.write(gson.toJson(propertyList));
     	writer.close();
 		
-		System.out.println("ExtractScore() complete.");
+    	Utility.exeComplete(startDate);
 	}
 
 }
