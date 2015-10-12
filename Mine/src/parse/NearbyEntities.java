@@ -17,7 +17,9 @@ import com.spatial4j.core.context.SpatialContext;
 import com.spatial4j.core.distance.DistanceCalculator;
 import com.spatial4j.core.distance.GeodesicSphereDistCalc;
 import com.spatial4j.core.shape.Point;
+import com.spatial4j.core.shape.Rectangle;
 import com.spatial4j.core.shape.impl.PointImpl;
+import com.spatial4j.core.distance.DistanceUtils;
 
 import cup.GeocodeResponse;
 import cup.GeocodeResponseArc;
@@ -245,10 +247,25 @@ public class NearbyEntities {
 		//testEnt.add("Russell square");
 		//testEnt.add("Big Ben");
 		//testEnt.add("Houses of Parliament");
-		testEnt.add("Singapore Padang");
+		testEnt.add("Singapore Management University Singapore");
+		//testEnt.add("Singapore Padang");
+		//testEnt.add("Parkway Parade Singapore");
+		testEnt.add("503 Tampines Central Singapore");
+		testEnt.add("YMCA Singapore");
+		
+		Point SMU = new PointImpl(103.850013919008,1.29655655,SpatialContext.GEO);
+		DistanceCalculator dc = new GeodesicSphereDistCalc.Vincenty();
 		
 		for (String a:testEnt){
-			System.out.println("BEST: " + bestGeo(a).toString());			
+			GeocodeResponse g =  bestGeo(a);
+			System.out.println("BEST: " + g.toString());
+			System.out.println("Distance from SMU: " + dc.distance(SMU, g.point)*DistanceUtils.DEG_TO_KM);
+			
+			Point[] box = Utility.boxHypo(g.point,1.0);
+			System.out.println("NW-SW Bound: " + Utility.pointToLatLng(box[0]) + ", " + Utility.pointToLatLng(box[1]));
+			//System.out.println(dc.distance(g.point,box[0])*DistanceUtils.DEG_TO_KM);
+			System.out.println("Within 4km of SMU? " + dc.within(g.point, SMU.getX(), SMU.getY(), 4*DistanceUtils.KM_TO_DEG));
+
 		}
 		
 		

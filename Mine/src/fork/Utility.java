@@ -6,6 +6,12 @@ import java.util.HashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import com.spatial4j.core.context.SpatialContext;
+import com.spatial4j.core.distance.DistanceCalculator;
+import com.spatial4j.core.distance.DistanceUtils;
+import com.spatial4j.core.distance.GeodesicSphereDistCalc;
+import com.spatial4j.core.shape.Point;
+
 
 public class Utility {
 
@@ -41,6 +47,20 @@ public class Utility {
 		System.out.printf("%s completed with execution time: %s", exe, timeElapsed(startDate,new Date()));
 	}
 	
+	public static String pointToLatLng(Point p){
+		return "(" + p.getY() + "," + p.getX() + ")";
+	}
+	
+	public static Point[] boxHypo(Point p, double distance){
+		DistanceCalculator dc = new GeodesicSphereDistCalc.Vincenty();
+		double intended = distance;
+		double hypo = Math.sqrt(2*Math.pow(intended, 2))*DistanceUtils.KM_TO_DEG;
+		Point nw = dc.pointOnBearing(p, hypo, -45.0, SpatialContext.GEO, null);
+		Point se = dc.pointOnBearing(p, hypo, -225.0, SpatialContext.GEO, null);
+		Point[] output = {nw,se};
+		
+		return output;
+	}
 	
 	public static void main(String[] args){
 		
