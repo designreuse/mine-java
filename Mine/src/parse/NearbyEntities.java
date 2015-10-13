@@ -21,6 +21,8 @@ import com.spatial4j.core.shape.Rectangle;
 import com.spatial4j.core.shape.impl.PointImpl;
 import com.spatial4j.core.distance.DistanceUtils;
 
+import cup.Entity;
+import cup.EntityTagged;
 import cup.GeocodeResponse;
 import cup.GeocodeResponseArc;
 import cup.GeocodeResponseBing;
@@ -72,7 +74,7 @@ public class NearbyEntities {
 			default:
 				break;
 		}
-		//System.out.println("GeoQuery " + geoCoder + ": " + url);
+		System.out.println("GeoQuery " + geoCoder + ": " + url);
 		
 		URLConnection connection;
 		String jsonResult = "";
@@ -223,10 +225,55 @@ public class NearbyEntities {
 			}
 		}
 		for(GeocodeResponse r:successResponsesArranged){
-			//System.out.println(r.toString());
+			System.out.println(r.toString());
 		}
 		
 		return successResponsesArranged.get(0);
+		
+	}
+	
+	public static GeocodeResponse detectAreaNotPlace(String query) throws IOException{
+		GeocodeResponse r = geoResponseClassed("bing",query);
+		if (r == null || r.type == null){
+			return null;
+		} else {
+			String toCheck = r.type.toLowerCase();
+			if (toCheck.contains("place") || toCheck.contains("neighborhood") || toCheck.contains("region")){
+				return r;
+			}
+		}
+		return null;
+	}
+	
+	public static EntityTagged detectAreaGN(String query, Point regionPt) throws JsonSyntaxException, UnsupportedEncodingException{
+		Gson gson = new Gson();
+		GeocodeResponseGeoNames gnResponse = gson.fromJson(geoQuery("geonames",query),GeocodeResponseGeoNames.class);
+		EntityTagged newET = null;
+		
+		try{
+			if(gnResponse.geonames[0].fcl.contentEquals("A") || gnResponse.geonames[0].fcl.contentEquals("P") ){
+				
+				DistanceCalculator dc = new GeodesicSphereDistCalc.Vincenty();
+				double eLat = gnResponse.geonames[0].lat;
+				double eLng = gnResponse.geonames[0].lng;
+				Point resultPt = new PointImpl(eLng,eLat,SpatialContext.GEO);
+				
+				//accept if only within 100km...reasonable.
+				if(dc.distance(regionPt, resultPt)*DistanceUtils.DEG_TO_KM < 100){
+					newET = new EntityTagged();
+					newET.name = gnResponse.geonames[0].name;
+					newET.latlng = new double[]{eLat,eLng};
+					newET.type = gnResponse.geonames[0].fcodeName;
+				} else {
+					System.out.println("detectAreaGN() " + query + " is too far away!");
+				}
+				
+			}
+		} catch (Exception e){
+			System.out.println("detectAreaGN() " + query + e.getMessage());
+		}
+		
+		return newET;
 		
 	}
 	
@@ -245,26 +292,42 @@ public class NearbyEntities {
 		//testEnt.add("Buckingham Palace");
 		//testEnt.add("London Eye");
 		//testEnt.add("Russell square");
-		//testEnt.add("Big Ben");
+		//testEnt.add("St. James Square London");
 		//testEnt.add("Houses of Parliament");
-		testEnt.add("Singapore Management University Singapore");
+		//testEnt.add("Singapore Management University Singapore");
 		//testEnt.add("Singapore Padang");
 		//testEnt.add("Parkway Parade Singapore");
-		testEnt.add("503 Tampines Central Singapore");
-		testEnt.add("YMCA Singapore");
+		//testEnt.add("503 Tampines Central Singapore");
+		//testEnt.add("YMCA Singapore");
 		
-		Point SMU = new PointImpl(103.850013919008,1.29655655,SpatialContext.GEO);
+		//String testProp = "Park Plaza Westminster Bridge London";
+		String testProp = "The Montague on The Gardens";
+		int testDist = 5;
+		
+		testEnt.add(testProp);
+		//testEnt.add("Big Ben");
+		//testEnt.add("Houses of Parliament");
+		
+		//testEnt.add("Covent Garden");
+		//testEnt.add("Jorge");
+		testEnt.add("Singapore");
+		testEnt.add("London");
+		testEnt.add("Earls Court");
+		testEnt.add("Nadler Kensington");
+		
+		Point SMU = new PointImpl(-0.11747763699958114,51.500725737000494,SpatialContext.GEO);
 		DistanceCalculator dc = new GeodesicSphereDistCalc.Vincenty();
 		
 		for (String a:testEnt){
 			GeocodeResponse g =  bestGeo(a);
 			System.out.println("BEST: " + g.toString());
-			System.out.println("Distance from SMU: " + dc.distance(SMU, g.point)*DistanceUtils.DEG_TO_KM);
+			System.out.println("Distance from " + testProp + ": " + dc.distance(SMU, g.point)*DistanceUtils.DEG_TO_KM);
+			System.out.println(detectAreaNotPlace(a));
 			
-			Point[] box = Utility.boxHypo(g.point,1.0);
+			Point[] box = Utility.boxHypo(g.point,2.0);
 			System.out.println("NW-SW Bound: " + Utility.pointToLatLng(box[0]) + ", " + Utility.pointToLatLng(box[1]));
 			//System.out.println(dc.distance(g.point,box[0])*DistanceUtils.DEG_TO_KM);
-			System.out.println("Within 4km of SMU? " + dc.within(g.point, SMU.getX(), SMU.getY(), 4*DistanceUtils.KM_TO_DEG));
+			System.out.println("Within " + testDist + "km of " + testProp + "? " + dc.within(g.point, SMU.getX(), SMU.getY(), testDist*DistanceUtils.KM_TO_DEG));
 
 		}
 		

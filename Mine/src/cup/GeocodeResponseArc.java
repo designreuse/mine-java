@@ -20,7 +20,7 @@ public class GeocodeResponseArc {
 	}
 	
 	public class attributes{
-		public int Score;
+		public double Score;
 		public String Addr_Type;
 	}
 	
